@@ -7,7 +7,7 @@ import os
 import requests
 
 
-API_KEY = os.getenv('NASA_API_KEY')
+API_KEY = os.getenv('NASA_API_KEY', 'DEMO_KEY')  # Use DEMO_KEY as fallback
 APOD_URL = 'https://api.nasa.gov/planetary/apod'
 
 def main():

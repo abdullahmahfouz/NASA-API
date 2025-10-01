@@ -3,10 +3,12 @@ Library of useful functions for working with images.
 '''
 import requests
 import ctypes
+import subprocess
+import os
  
 def main():
     image_url = 'https://apod.nasa.gov/apod/image/2304/PolarisIfn_Zayaz_4000.jpg'
-    image_path = r'C:\Users\Abdullah\OneDrive\Desktop\COMP 593\Final-project\NGC3521LRGBHaAPOD-20.jpg'
+    image_path = '/Users/Abdullah/Desktop/NGC3521LRGBHaAPOD-20.jpg'
     
     image_data = download_image(image_url)
     save_image_file(image_data, image_path)
@@ -66,19 +68,38 @@ def set_desktop_background_image(image_path):
         image_path (str): Path of image file
  
     Returns:
-        bytes: True, if succcessful. False, if unsuccessful        
+        bool: True, if successful. False, if unsuccessful        
     """
     print(f"Setting desktop to {image_path}...", end='')
-    SPI_SETDESKWALLPAPER = 20
+    
+    # Check if the image file exists
+    if not os.path.exists(image_path):
+        print("failure - file not found")
+        return False
+    
     try:
-        if ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, image_path, 3):
+        # Convert to absolute path and use POSIX format
+        abs_path = os.path.abspath(image_path)
+        
+        # AppleScript to set desktop background for all desktops
+        script = f'''tell application "Finder"
+    set desktop picture to POSIX file "{abs_path}"
+end tell'''
+        
+        result = subprocess.run(['osascript', '-e', script], 
+                              capture_output=True, text=True)
+        
+        if result.returncode == 0:
             print("success")
             return True
         else:
             print("failure")
-    except:
+            print(f"AppleScript error: {result.stderr}")
+            return False
+    except Exception as e:
         print("failure")
-    return False
+        print(f"Error: {e}")
+        return False
  
 def scale_image(image_size, max_size=(800, 600)):
     """Calculates the dimensions of an image scaled to a maximum width

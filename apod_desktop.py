@@ -182,6 +182,11 @@ def add_apod_to_cache(apod_date):
     # gets the APOD date from APOD api
     apod_info = apod_api.get_apod_info(apod_date)
     
+    # Check if apod_info was successfully retrieved
+    if apod_info is None:
+        print("Error: Failed to get APOD information from NASA API")
+        return 0
+    
     # Extract the image explanation and title from the APOD information
     image_explantion = apod_info['explanation']
     image_title = apod_info['title']
