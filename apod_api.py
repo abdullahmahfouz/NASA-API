@@ -46,7 +46,8 @@ def get_apod_info(apod_date):
         
     # If the API call is unsuccessful, returns None
     if req.status_code > 200:
-        print('failure to get APOD Information')
+        print(f'failure to get APOD Information - Status: {req.status_code}')
+        print(f'Error message: {req.text}')
         return None
     
    
@@ -71,7 +72,12 @@ def get_apod_image_url(apod_info_dict):
     
     # If the APOD is a video, gets the URL of the video thumbnail
     if media_type == 'video':
-        image_url = apod_info_dict['thumbnail_url']
+        # Check if thumbnail_url exists, otherwise use the regular url
+        if 'thumbnail_url' in apod_info_dict:
+            image_url = apod_info_dict['thumbnail_url']
+        else:
+            print("No thumbnail available for video, using regular URL")
+            image_url = apod_info_dict.get('url', None)
         return image_url
     
     # If the APOD is neither an image nor a video, prints a message to the console and returns None

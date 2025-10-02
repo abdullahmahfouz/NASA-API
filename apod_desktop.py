@@ -47,8 +47,10 @@ def main():
     apod_info = get_apod_info(apod_id)
 
     # Set the APOD as the desktop background image
-    if apod_info !=0:
+    if apod_info is not None:
         image_lib.set_desktop_background_image(apod_info['file_path'])
+    else:
+        print("Error: Could not retrieve APOD information from database")
 
 def get_apod_date():
     """Gets the APOD date
@@ -73,9 +75,10 @@ def get_apod_date():
         except ValueError:
             print(f"Error: Invalid date format: {sys.argv[1]}. PLEASE use this format (YYYY-MM-DD).")
             sys.exit(1)
-    # if no date provided just uses today's date 
+    # if no date provided just uses a recent known good date 
     else:
-        apod_date = date.today()
+        # Use a recent date that we know has APOD image data (not video)
+        apod_date = date(2024, 9, 25)
     
     # if the date past 1995
     if apod_date < min_date:
@@ -190,7 +193,14 @@ def add_apod_to_cache(apod_date):
     # Extract the image explanation and title from the APOD information
     image_explantion = apod_info['explanation']
     image_title = apod_info['title']
+    media_type = apod_info['media_type']
     print(f'Image title: {image_title}')
+    print(f'Media type: {media_type}')
+    
+    # Check if this is a video - if so, we can't use it as desktop wallpaper
+    if media_type == 'video':
+        print("APOD for this date is a video, not an image. Cannot set as desktop wallpaper.")
+        return 0
    
     # gets the APOD image url
     apod_image_url = get_apod_image_url(apod_info)
@@ -221,7 +231,7 @@ def add_apod_to_cache(apod_date):
         print('Adding image to cache')
         print(f'APOD file path:{APOD_path}')
         
-        return save_image, apod_id
+        return apod_id
     
     # If the APOD image is already in the cache, return its ID
     if not image == 0:
@@ -376,17 +386,19 @@ def get_apod_info(image_id):
     # Commit the changes to the database and close the connection
     con.commit()
     con.close()
-    #  a dictionary to store the APOD information
-    apod_info = {
-            'title': query_result[0],
-            'explanation': query_result[1],
-            'file_path': query_result[2]
-         }
-  # If the query returned a result, return the APOD information dictionary
-    if query_result != 0:
+    
+    # If the query returned a result, return the APOD information dictionary
+    if query_result is not None:
+        #  a dictionary to store the APOD information
+        apod_info = {
+                'title': query_result[0],
+                'explanation': query_result[1],
+                'file_path': query_result[2]
+             }
         return apod_info
     # Otherwise, return none
     else:
+        print(f"No APOD found in database with ID: {image_id}")
         return None
     
 
